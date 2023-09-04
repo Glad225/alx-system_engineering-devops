@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# fix nginx configuration and start on port 80
+
+sed -i "s/ipv6only=on//" /etc/nginx/sites-available/default
+rm -f /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+service nginx restart
