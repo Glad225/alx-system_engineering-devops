@@ -1,27 +1,22 @@
 #!/usr/bin/env bash
-# Bash script that will display information about subdomains.
+# A script that displays domain dns informations for a domain
+domaininfo () {
+	answer_section=$(dig "$1" | grep -A1 'ANSWER SECTION' | tail -n 1)
 
-function domain_check {
-	domain_names=("www" "lb-01" "web-01" "web-02")
+	subdomain=$(echo "$answer_section" | awk '{print $1;}' FS=.) 
+	record_type=$(echo "$answer_section" | awk '{print $4;}')
+	ip_address=$(echo "$answer_section" | awk '{print $5}')
 
-	for i in "${domain_names[@]}";
-	do
-		dig "${i}"."$1" | grep -A1 'ANSWER SECTION:' | \
-		awk 'FNR == 2 {printf "The subdomain %s is a %s record and points to %s\n", var, $4, $5}' var="$i"
-	done
+	echo "The subdomain $subdomain is a $record_type record and points to $ip_address" 
 }
 
-function subdomain_check {
-	dig "${2}"."$1" | grep -A1 'ANSWER SECTION:' | \
-	awk 'FNR == 2 {printf "The subdomain %s is a %s record and points to %s\n", var, $4, $5}' var="$2"
-}
-
-if [ $# -lt 1 ]
+if [ $# -eq 1 ]
 then
-	echo "*** Provide domain name ***"
-elif [ $# -eq 1 ]
+	domaininfo "www.$1" 
+	domaininfo "lb-01.$1"
+	domaininfo "web-01.$1"
+	domaininfo "web-02.$1"
+elif [ $# -eq 2 ]
 then
-	domain_check "$1";
-else
-	subdomain_check "$1" "$2";
+	domaininfo "$2.$1"
 fi

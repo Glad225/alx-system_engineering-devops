@@ -2,7 +2,7 @@ global
         log /dev/log    local0
         log /dev/log    local1 notice
         chroot /var/lib/haproxy
-        stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+        stats socket /run/haproxy/admin.sock mode 660 level admin
         stats timeout 30s
         user haproxy
         group haproxy
@@ -33,19 +33,18 @@ defaults
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
 
-frontend  ollyjhay-frontend
-        bind *:80
-        mode http
-        bind *:443 ssl crt /etc/haproxy/certs/www.ollyjhay.tech.pem
-        redirect scheme https if !{ ssl_fc }
-        default_backend ollyjhay-backend
-backend ollyjhay-backend
-        balance roundrobin
-        server 93511-web-01 35.174.209.1:80 check
-        server 93511-web-02 35.153.52.94:80 check
+# alx, HAproxy for web servers, begin:
 
-listen http-in
-        bind :80
+backend web-backend
         balance roundrobin
-        server 93511-web-01 35.174.209.1:80 check
-        server 93511-web-02 35.153.52.94:80 check
+        option forwardfor
+        server 213901-web-01 100.26.222.203 check
+        server 213901-web-02 34.224.95.63 check
+frontend proxynode
+        bind *:80
+	mode http
+        bind *:443 ssl crt /etc/letsencrypt/live/www.prince.tech/fullchain.pem
+	http-request redirect scheme https code 301 unless { ssl_fc }
+        default_backend web-backend
+
+# alx, HAproxy for web servers, ends:
